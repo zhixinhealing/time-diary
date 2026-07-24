@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe7" />
+  <title>時光日記 V1.1</title>
+  <style>
+    :root{
+      --bg:#f7f3ed;
+      --card:#fffdf9;
+      --ink:#3f3a35;
+      --muted:#8c837a;
+      --line:#e8dfd5;
+      --accent:#9f8b78;
+      --accent2:#cbbba9;
+      --ok:#7d9b76;
+      --danger:#b46f6f;
+      --shadow:0 8px 24px rgba(80,67,54,.08);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+    body{padding-bottom:92px}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:760px;margin:0 auto;padding:18px 14px 30px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:6px 4px 16px;
+    }
+    .brand h1{margin:0;font-size:26px;letter-spacing:.08em}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+    .date-pill{
+      background:var(--card);border:1px solid var(--line);border-radius:999px;
+      padding:9px 12px;color:var(--muted);font-size:13px;box-shadow:var(--shadow)
+    }
+    .section{display:none}
+    .section.active{display:block}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card{
+      background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      padding:16px;box-shadow:var(--shadow)
+    }
+    .card h3{margin:0 0 8px;font-size:16px}
+    .big{font-size:30px;font-weight:700;line-height:1.2}
+    .sub{font-size:13px;color:var(--muted)}
+    .progress{height:11px;border-radius:99px;background:#eee6dc;overflow:hidden;margin-top:12px}
+    .bar{height:100%;width:0;background:var(--accent);transition:.3s}
+    .full{grid-column:1/-1}
+    .quick-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    .action{
+      border:1px solid var(--line);background:var(--card);border-radius:16px;padding:14px;
+      text-align:left;box-shadow:var(--shadow);color:var(--ink)
+    }
+    .action strong{display:block;margin-bottom:4px}
+    .action span{color:var(--muted);font-size:13px}
+    .timeline{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .entry{
+      display:flex;gap:12px;align-items:flex-start;padding:13px;border-radius:16px;background:#faf6f0;border:1px solid var(--line)
+    }
+    .entry-time{min-width:52px;font-weight:700}
+    .entry-body{flex:1}
+    .entry-title{font-weight:700}
+    .entry-meta{font-size:13px;color:var(--muted);margin-top:3px;white-space:pre-wrap}
+    .delete{
+      border:0;background:transparent;color:var(--danger);font-size:18px;padding:0 4px
+    }
+    .panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .panel-title h2{margin:0;font-size:22px}
+    .form-card{margin-bottom:14px}
+    label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
+    input,textarea,select{
+      width:100%;border:1px solid var(--line);background:#fff;border-radius:14px;
+      padding:12px 13px;color:var(--ink);outline:none
+    }
+    input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+    textarea{min-height:92px;resize:vertical}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{margin-bottom:12px}
+    .btn{
+      width:100%;border:0;border-radius:15px;padding:13px 16px;font-weight:700;
+      background:var(--accent);color:white
+    }
+    .btn.secondary{background:#ede5dc;color:var(--ink)}
+    .btn.danger{background:var(--danger)}
+    .water-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+    .water-buttons button{
+      border:1px solid var(--line);background:#fff;border-radius:14px;padding:13px 8px;color:var(--ink)
+    }
+    .tabs{
+      position:fixed;left:0;right:0;bottom:0;z-index:20;
+      background:rgba(255,253,249,.96);backdrop-filter:blur(12px);
+      border-top:1px solid var(--line);padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+      display:grid;grid-template-columns:repeat(5,1fr);gap:4px
+    }
+    .tab{
+      border:0;background:transparent;padding:7px 3px;color:var(--muted);font-size:12px;border-radius:12px
+    }
+    .tab span{display:block;font-size:20px;margin-bottom:2px}
+    .tab.active{background:#eee6dc;color:var(--ink);font-weight:700}
+    .empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px}
+    .history-controls{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px}
+    .history-controls button{border:0;border-radius:14px;padding:0 15px;background:var(--accent);color:white}
+    .stat-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+    .stat-row:last-child{border-bottom:0}
+    .note{font-size:12px;color:var(--muted);line-height:1.6}
+    .chart-wrap{
+      width:100%;overflow-x:auto;padding:4px 0 2px;
+    }
+    .weight-chart{
+      width:100%;min-width:520px;height:250px;display:block;
+    }
+    .chart-grid{stroke:#e8dfd5;stroke-width:1}
+    .chart-line{fill:none;stroke:#9f8b78;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+    .chart-dot{fill:#fffdf9;stroke:#9f8b78;stroke-width:3}
+    .chart-label{fill:#8c837a;font-size:11px}
+    .chart-value{fill:#3f3a35;font-size:11px;font-weight:700}
+    .chart-summary{
+      display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;
+      margin:0 0 10px;color:var(--muted);font-size:13px
+    }
+    @media (max-width:430px){
+      .app{padding-left:12px;padding-right:12px}
+      .brand h1{font-size:23px}
+      .grid{grid-template-columns:1fr 1fr}
+      .card{padding:14px}
+      .big{font-size:25px}
+      .quick-actions{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>時光日記</h1>
+        <p>記下每天的飲食與生活節奏</p>
+      </div>
+      <div class="date-pill" id="todayLabel"></div>
+    </header>
+
+    <section id="home" class="section active">
+      <div class="grid">
+        <div class="card">
+          <h3>🍽 今日飲食</h3>
+          <div class="big" id="mealCount">0 筆</div>
+          <div class="sub" id="lastMeal">尚未記錄</div>
+        </div>
+        <div class="card">
+          <h3>💧 今日喝水</h3>
+          <div class="big"><span id="waterNow">0</span> ml</div>
+          <div class="sub">目標 <span id="waterGoalText">2000</span> ml</div>
+          <div class="progress"><div id="waterBar" class="bar"></div></div>
+        </div>
+        <div class="card">
+          <h3>⚖️ 今日體重</h3>
+          <div class="big" id="weightToday">—</div>
+          <div class="sub" id="weightDiff">尚未記錄</div>
+        </div>
+        <div class="card">
+          <h3>🌙 昨夜睡眠</h3>
+          <div class="big" id="sleepToday">—</div>
+          <div class="sub" id="sleepQuality">尚未記錄</div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="action" onclick="go('food')"><strong>＋ 新增飲食</strong><span>早餐、點心、午晚餐</span></button>
+        <button class="action" onclick="go('water')"><strong>＋ 記錄喝水</strong><span>快速增加飲水量</span></button>
+        <button class="action" onclick="go('health')"><strong>＋ 健康紀錄</strong><span>體重與睡眠</span></button>
+        <button class="action" onclick="go('history')"><strong>查看歷史</strong><span>依日期回顧紀錄</span></button>
+      </div>
+
+      <div class="card full" style="margin-top:14px">
+        <div class="panel-title"><h2 style="font-size:18px">今日時間軸</h2></div>
+        <div id="todayTimeline" class="timeline"></div>
+      </div>
+    </section>
+
+    <section id="food" class="section">
+      <div class="panel-title"><h2>飲食紀錄</h2></div>
+      <div class="card form-card">
+        <div class="form-grid">
+          <div class="field">
+            <label>日期</label>
+            <input type="date" id="foodDate">
+          </div>
+          <div class="field">
+            <label>進食時間</label>
+            <input type="time" id="foodTime">
+          </div>
+        </div>
+        <div class="field">
+          <label>時段</label>
+          <select id="foodType">
+            <option>早餐</option>
+            <option>上午點心</option>
+            <option>午餐</option>
+            <option>下午點心</option>
+            <option>晚餐</option>
+            <option>宵夜</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>吃了什麼</label>
+          <textarea id="foodContent" placeholder="例如：茶葉蛋、無糖豆漿、香蕉"></textarea>
+        </div>
+        <div class="field">
+          <label>份量或備註（選填）</label>
+          <input id="foodNote" placeholder="例如：飯半碗、吃完剛剛好">
+        </div>
+        <button class="btn" onclick="saveFood()">儲存飲食紀錄</button>
+      </div>
+      <div class="card">
+        <h3>今日飲食</h3>
+        <div id="foodList" class="timeline"></div>
+      </div>
+    </section>
+
+    <section id="water" class="section">
+      <div class="panel-title"><h2>喝水紀錄</h2></div>
+      <div class="card form-card">
+        <div class="big"><span id="waterPageNow">0</span> ml</div>
+        <div class="sub">今日目標 <span id="waterPageGoal">2000</span> ml</div>
+        <div class="progress"><div id="waterPageBar" class="bar"></div></div>
+        <div class="water-buttons">
+          <button onclick="addWater(100)">＋100 ml</button>
+          <button onclick="addWater(250)">＋250 ml</button>
+          <button onclick="addWater(500)">＋500 ml</button>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>自行輸入</label>
+            <input type="number" id="waterCustom" min="1" placeholder="例如 300">
+          </div>
+          <div class="field">
+            <label>時間</label>
+            <input type="time" id="waterTime">
+          </div>
+        </div>
+        <button class="btn secondary" onclick="addCustomWater()">新增自訂水量</button>
+      </div>
+      <div class="card">
+        <h3>今日喝水明細</h3>
+        <div id="waterList" class="timeline"></div>
+      </div>
+    </section>
+
+    <section id="health" class="section">
+      <div class="panel-title"><h2>健康紀錄</h2></div>
+      <div class="card form-card">
+        <h3>⚖️ 體重</h3>
+        <div class="form-grid">
+          <div class="field"><label>日期</label><input type="date" id="weightDate"></div>
+          <div class="field"><label>時間</label><input type="time" id="weightTime"></div>
+        </div>
+        <div class="field"><label>體重（kg）</label><input type="number" step="0.1" id="weightValue" placeholder="例如 62.3"></div>
+        <div class="field"><label>備註（選填）</label><input id="weightNote" placeholder="例如：起床後、空腹"></div>
+        <button class="btn" onclick="saveWeight()">儲存體重</button>
+      </div>
+
+      <div class="card form-card">
+        <h3>🌙 睡眠</h3>
+        <div class="field"><label>睡眠歸屬日期</label><input type="date" id="sleepDate"></div>
+        <div class="form-grid">
+          <div class="field"><label>入睡時間</label><input type="time" id="sleepStart"></div>
+          <div class="field"><label>起床時間</label><input type="time" id="sleepEnd"></div>
+        </div>
+        <div class="field">
+          <label>睡眠品質</label>
+          <select id="sleepQualityInput">
+            <option>很好</option>
+            <option>還不錯</option>
+            <option selected>普通</option>
+            <option>不太好</option>
+            <option>很差</option>
+          </select>
+        </div>
+        <div class="field"><label>備註（選填）</label><input id="sleepNote" placeholder="例如：半夜醒來一次"></div>
+        <button class="btn" onclick="saveSleep()">儲存睡眠</button>
+      </div>
+
+      <div class="card form-card">
+        <div class="panel-title" style="margin-bottom:4px">
+          <h3 style="margin:0">📈 體重趨勢</h3>
+          <span class="sub">最近 30 筆</span>
+        </div>
+        <div id="weightChartSummary" class="chart-summary"></div>
+        <div id="weightChartEmpty" class="empty">記錄至少 2 筆體重後，就會顯示折線圖</div>
+        <div id="weightChartWrap" class="chart-wrap" style="display:none">
+          <svg id="weightChart" class="weight-chart" role="img" aria-label="體重變化折線圖"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>最近紀錄</h3>
+        <div id="healthList" class="timeline"></div>
+      </div>
+    </section>
+
+    <section id="history" class="section">
+      <div class="panel-title"><h2>歷史紀錄</h2></div>
+      <div class="history-controls">
+        <input type="date" id="historyDate">
+        <button onclick="renderHistory()">查看</button>
+      </div>
+      <div class="card">
+        <div id="historySummary"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3>設定與備份</h3>
+        <div class="field" style="margin-top:12px">
+          <label>每日喝水目標（ml）</label>
+          <input type="number" id="goalInput" min="100" step="100">
+        </div>
+        <button class="btn" onclick="saveGoal()">儲存喝水目標</button>
+        <div style="height:10px"></div>
+        <button class="btn secondary" onclick="exportData()">匯出備份</button>
+        <div style="height:10px"></div>
+        <label class="btn secondary" style="display:block;text-align:center">
+          匯入備份
+          <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+        </label>
+        <p class="note">資料只保存在目前瀏覽器。清除瀏覽器資料或更換手機前，請先匯出備份。</p>
+      </div>
+    </section>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-target="home" onclick="go('home')"><span>⌂</span>今日</button>
+    <button class="tab" data-target="food" onclick="go('food')"><span>🍽</span>飲食</button>
+    <button class="tab" data-target="water" onclick="go('water')"><span>💧</span>喝水</button>
+    <button class="tab" data-target="health" onclick="go('health')"><span>♡</span>健康</button>
+    <button class="tab" data-target="history" onclick="go('history')"><span>▦</span>歷史</button>
+  </nav>
+
+<script>
+const KEY='timeDiaryDataV1';
+let db=load();
+
+function base(){
+  return {foods:[], waters:[], weights:[], sleeps:[], settings:{waterGoal:2000}};
+}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY));
+    return d ? {...base(),...d,settings:{...base().settings,...(d.settings||{})}} : base();
+  }catch(e){return base()}
+}
+function persist(){localStorage.setItem(KEY,JSON.stringify(db))}
+function pad(n){return String(n).padStart(2,'0')}
+function localDate(d=new Date()){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function localTime(d=new Date()){return `${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+function go(id){
+  document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.target===id));
+  refresh();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function setDefaults(){
+  const d=localDate(), t=localTime();
+  ['foodDate','weightDate','sleepDate','historyDate'].forEach(id=>document.getElementById(id).value ||= d);
+  ['foodTime','waterTime','weightTime'].forEach(id=>document.getElementById(id).value ||= t);
+  document.getElementById('goalInput').value=db.settings.waterGoal;
+}
+function saveFood(){
+  const content=document.getElementById('foodContent').value.trim();
+  if(!content)return alert('請輸入吃了什麼');
+  db.foods.push({
+    id:uid(), date:foodDate.value, time:foodTime.value, type:foodType.value,
+    content, note:foodNote.value.trim()
+  });
+  persist();
+  foodContent.value=''; foodNote.value=''; foodTime.value=localTime();
+  refresh();
+}
+function addWater(amount){
+  db.waters.push({id:uid(),date:localDate(),time:waterTime.value||localTime(),amount:Number(amount)});
+  persist(); waterTime.value=localTime(); refresh();
+}
+function addCustomWater(){
+  const v=Number(waterCustom.value);
+  if(!v||v<=0)return alert('請輸入正確水量');
+  addWater(v); waterCustom.value='';
+}
+function saveWeight(){
+  const v=Number(weightValue.value);
+  if(!v||v<=0)return alert('請輸入正確體重');
+  db.weights.push({id:uid(),date:weightDate.value,time:weightTime.value,value:v,note:weightNote.value.trim()});
+  persist(); weightValue.value=''; weightNote.value=''; refresh();
+}
+function duration(start,end){
+  if(!start||!end)return 0;
+  const [sh,sm]=start.split(':').map(Number), [eh,em]=end.split(':').map(Number);
+  let mins=(eh*60+em)-(sh*60+sm);
+  if(mins<0)mins+=1440;
+  return mins;
+}
+function fmtMinutes(mins){
+  const h=Math.floor(mins/60), m=mins%60;
+  return `${h} 小時 ${m} 分`;
+}
+function saveSleep(){
+  const mins=duration(sleepStart.value,sleepEnd.value);
+  if(!sleepStart.value||!sleepEnd.value)return alert('請填寫入睡與起床時間');
+  db.sleeps.push({
+    id:uid(),date:sleepDate.value,start:sleepStart.value,end:sleepEnd.value,
+    minutes:mins,quality:sleepQualityInput.value,note:sleepNote.value.trim()
+  });
+  persist(); sleepNote.value=''; refresh();
+}
+function del(type,id){
+  if(!confirm('確定刪除這筆紀錄？'))return;
+  db[type]=db[type].filter(x=>x.id!==id);persist();refresh();
+}
+function dayData(date){
+  return {
+    foods:db.foods.filter(x=>x.date===date).sort((a,b)=>a.time.localeCompare(b.time)),
+    waters:db.waters.filter(x=>x.date===date).sort((a,b)=>a.time.localeCompare(b.time)),
+    weights:db.weights.filter(x=>x.date===date).sort((a,b)=>a.time.localeCompare(b.time)),
+    sleeps:db.sleeps.filter(x=>x.date===date)
+  }
+}
+function entry(time,title,meta,delType,id){
+  return `<div class="entry">
+    <div class="entry-time">${esc(time||'—')}</div>
+    <div class="entry-body"><div class="entry-title">${esc(title)}</div><div class="entry-meta">${esc(meta||'')}</div></div>
+    ${delType?`<button class="delete" onclick="del('${delType}','${id}')">×</button>`:''}
+  </div>`
+}
+function renderHome(){
+  const d=dayData(localDate());
+  mealCount.textContent=`${d.foods.length} 筆`;
+  lastMeal.textContent=d.foods.length?`最後：${d.foods.at(-1).time} ${d.foods.at(-1).type}`:'尚未記錄';
+  const water=d.waters.reduce((s,x)=>s+Number(x.amount),0), goal=db.settings.waterGoal;
+  waterNow.textContent=water; waterGoalText.textContent=goal; waterBar.style.width=Math.min(100,water/goal*100)+'%';
+  const wt=d.weights.at(-1);
+  weightToday.textContent=wt?`${wt.value} kg`:'—';
+  const allW=[...db.weights].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  if(wt){
+    const idx=allW.findIndex(x=>x.id===wt.id), prev=idx>0?allW[idx-1]:null;
+    weightDiff.textContent=prev?`較上次 ${(wt.value-prev.value)>=0?'+':''}${(wt.value-prev.value).toFixed(1)} kg`:'第一筆紀錄';
+  } else weightDiff.textContent='尚未記錄';
+  const sl=d.sleeps.at(-1);
+  sleepToday.textContent=sl?fmtMinutes(sl.minutes):'—';
+  sleepQuality.textContent=sl?`品質：${sl.quality}`:'尚未記錄';
+
+  const items=[
+    ...d.foods.map(x=>({time:x.time,html:entry(x.time,`${x.type}｜${x.content}`,x.note,'foods',x.id)})),
+    ...d.waters.map(x=>({time:x.time,html:entry(x.time,`喝水 ${x.amount} ml`,'','waters',x.id)})),
+    ...d.weights.map(x=>({time:x.time,html:entry(x.time,`體重 ${x.value} kg`,x.note,'weights',x.id)}))
+  ].sort((a,b)=>a.time.localeCompare(b.time));
+  todayTimeline.innerHTML=items.length?items.map(x=>x.html).join(''):'<div class="empty">今天還沒有紀錄</div>';
+}
+function renderFood(){
+  const d=dayData(localDate());
+  foodList.innerHTML=d.foods.length?d.foods.map(x=>entry(x.time,`${x.type}｜${x.content}`,x.note,'foods',x.id)).join(''):'<div class="empty">今天尚未記錄飲食</div>';
+}
+function renderWater(){
+  const d=dayData(localDate()), water=d.waters.reduce((s,x)=>s+Number(x.amount),0), goal=db.settings.waterGoal;
+  waterPageNow.textContent=water;waterPageGoal.textContent=goal;waterPageBar.style.width=Math.min(100,water/goal*100)+'%';
+  waterList.innerHTML=d.waters.length?d.waters.map(x=>entry(x.time,`${x.amount} ml`,'','waters',x.id)).join(''):'<div class="empty">今天尚未記錄喝水</div>';
+}
+
+function renderWeightChart(){
+  const data=[...db.weights]
+    .filter(x=>Number.isFinite(Number(x.value)))
+    .sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))
+    .slice(-30);
+
+  const empty=document.getElementById('weightChartEmpty');
+  const wrap=document.getElementById('weightChartWrap');
+  const svg=document.getElementById('weightChart');
+  const summary=document.getElementById('weightChartSummary');
+
+  if(data.length<2){
+    empty.style.display='block';
+    wrap.style.display='none';
+    summary.innerHTML=data.length===1
+      ? `<span>目前 1 筆：${Number(data[0].value).toFixed(1)} kg</span>`
+      : '';
+    return;
+  }
+
+  empty.style.display='none';
+  wrap.style.display='block';
+
+  const values=data.map(x=>Number(x.value));
+  const first=values[0], last=values.at(-1);
+  const change=last-first;
+  const minValue=Math.min(...values);
+  const maxValue=Math.max(...values);
+  summary.innerHTML=`
+    <span>起始 ${first.toFixed(1)} kg</span>
+    <span>最新 ${last.toFixed(1)} kg</span>
+    <span>變化 ${change>=0?'+':''}${change.toFixed(1)} kg</span>`;
+
+  const width=Math.max(520,data.length*54);
+  const height=250;
+  const left=42,right=18,top=24,bottom=42;
+  const plotW=width-left-right;
+  const plotH=height-top-bottom;
+  const spread=Math.max(1,maxValue-minValue);
+  const yMin=Math.floor((minValue-spread*.18)*2)/2;
+  const yMax=Math.ceil((maxValue+spread*.18)*2)/2;
+  const yRange=Math.max(.5,yMax-yMin);
+  const x=i=>left+(data.length===1?plotW/2:(i/(data.length-1))*plotW);
+  const y=v=>top+((yMax-v)/yRange)*plotH;
+
+  let markup='';
+  const gridCount=4;
+  for(let i=0;i<=gridCount;i++){
+    const gy=top+(i/gridCount)*plotH;
+    const gv=yMax-(i/gridCount)*yRange;
+    markup+=`<line class="chart-grid" x1="${left}" y1="${gy}" x2="${width-right}" y2="${gy}"></line>`;
+    markup+=`<text class="chart-label" x="${left-7}" y="${gy+4}" text-anchor="end">${gv.toFixed(1)}</text>`;
+  }
+
+  const points=data.map((d,i)=>`${x(i)},${y(Number(d.value))}`).join(' ');
+  markup+=`<polyline class="chart-line" points="${points}"></polyline>`;
+
+  data.forEach((d,i)=>{
+    const cx=x(i), cy=y(Number(d.value));
+    const shortDate=d.date.slice(5).replace('-','/');
+    markup+=`<circle class="chart-dot" cx="${cx}" cy="${cy}" r="4.5"></circle>`;
+    markup+=`<text class="chart-value" x="${cx}" y="${cy-10}" text-anchor="middle">${Number(d.value).toFixed(1)}</text>`;
+    markup+=`<text class="chart-label" x="${cx}" y="${height-17}" text-anchor="middle">${shortDate}</text>`;
+  });
+
+  svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+  svg.style.width=`${width}px`;
+  svg.innerHTML=markup;
+}
+
+function renderHealth(){
+  const items=[
+    ...db.weights.map(x=>({sort:x.date+x.time,html:entry(`${x.date}\n${x.time}`,`體重 ${x.value} kg`,x.note,'weights',x.id)})),
+    ...db.sleeps.map(x=>({sort:x.date+'99:99',html:entry(x.date,`睡眠 ${fmtMinutes(x.minutes)}`,`${x.start}－${x.end}｜${x.quality}${x.note?'｜'+x.note:''}`,'sleeps',x.id)}))
+  ].sort((a,b)=>b.sort.localeCompare(a.sort)).slice(0,12);
+  healthList.innerHTML=items.length?items.map(x=>x.html).join(''):'<div class="empty">尚未有健康紀錄</div>';
+}
+function renderHistory(){
+  const date=historyDate.value||localDate(), d=dayData(date);
+  const water=d.waters.reduce((s,x)=>s+Number(x.amount),0);
+  let html=`<div class="stat-row"><strong>${date}</strong><span>${d.foods.length} 筆飲食</span></div>
+    <div class="stat-row"><span>喝水</span><strong>${water} ml</strong></div>
+    <div class="stat-row"><span>體重</span><strong>${d.weights.at(-1)?d.weights.at(-1).value+' kg':'—'}</strong></div>
+    <div class="stat-row"><span>睡眠</span><strong>${d.sleeps.at(-1)?fmtMinutes(d.sleeps.at(-1).minutes):'—'}</strong></div>`;
+  html+=`<div class="timeline" style="margin-top:14px">`;
+  html+=d.foods.length?d.foods.map(x=>entry(x.time,`${x.type}｜${x.content}`,x.note)).join(''):'<div class="empty">這天沒有飲食紀錄</div>';
+  html+='</div>';
+  historySummary.innerHTML=html;
+}
+function saveGoal(){
+  const v=Number(goalInput.value);
+  if(!v||v<100)return alert('請輸入正確目標');
+  db.settings.waterGoal=v;persist();refresh();alert('已儲存');
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`時光日記備份_${localDate()}.json`;a.click();URL.revokeObjectURL(a.href);
+}
+function importData(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const d=JSON.parse(reader.result);
+      if(!d.foods||!d.waters||!d.weights||!d.sleeps)throw new Error();
+      db={...base(),...d,settings:{...base().settings,...(d.settings||{})}};
+      persist();refresh();alert('匯入完成');
+    }catch(err){alert('備份檔格式不正確')}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+function refresh(){
+  setDefaults();renderHome();renderFood();renderWater();renderWeightChart();renderHealth();renderHistory();
+}
+const now=new Date();
+todayLabel.textContent=`${now.getMonth()+1}/${now.getDate()} ${['日','一','二','三','四','五','六'][now.getDay()]}`;
+setDefaults();refresh();
+</script>
+</body>
+</html>
